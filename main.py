@@ -23,7 +23,7 @@ def _error_msg(msg, status_code=400):
 async def create_new_user(request):
     json_ = request.json
 
-    if 'name' not in json_:
+    if not _check_field_in_request(request, 'name'):
         return _error_msg("missing name parameter")
 
     answer = users_db.users.insert_one(json_).inserted_id
@@ -50,12 +50,12 @@ async def update_user_by_id(request, user_id: str):
     try:
         ob_id_user_id = ObjectId(str(user_id))
     except InvalidId:
-        return json({"error": "invalid user_id"}, status=400)
+        return _error_msg("invalid user_id")
 
     answer = users_db.users.update_one({"_id": ob_id_user_id}, {"$set": {"name": json_['name']}})
 
     if answer.matched_count == 0:
-        return json({"error": "no such user to update with id %s" % user_id})
+        return _error_msg("no such user to update with id %s" % user_id)
 
     return json({"id": user_id, "name": json_["name"]}, 200)
 
