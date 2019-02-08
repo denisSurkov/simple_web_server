@@ -23,7 +23,10 @@ def _error_msg(msg, status_code=400):
 async def create_new_user(request):
     json_ = request.json
 
-    if not _check_field_in_request(request, 'name'):
+    if not json_:
+        return _error_msg("not a json")
+
+    if not _check_field_in_request(request, *['name']):
         return _error_msg("missing name parameter")
 
     answer = users_db.users.insert_one(json_).inserted_id
@@ -32,7 +35,13 @@ async def create_new_user(request):
 
 @app.route('/users/<user_id>', methods=('GET', ))
 async def get_user_by_id(request, user_id: str):
-    answer = users_db.users.find_one({"_id": ObjectId(user_id)})
+
+    try:
+        ob_id_user_id = ObjectId(str(user_id))
+    except InvalidId:
+        return _error_msg("invalid user_id")
+
+    answer = users_db.users.find_one({"_id": ob_id_user_id})
 
     if not answer:
         return _error_msg("no such user with id %s" % user_id)
@@ -64,7 +73,7 @@ async def update_user_by_id(request, user_id: str):
 async def get_all_users(request):
     result = users_db.users.find({})
 
-    total_json = [{id: str(user['_id']), 'name': user['name']} for user in result]
+    total_json = [{"id": str(user['_id']), 'name': user['name']} for user in result]
     return json(total_json)
 
 if __name__ == '__main__':
