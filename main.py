@@ -76,5 +76,11 @@ async def get_all_users(request):
     total_json = [{"id": str(user['_id']), 'name': user['name']} for user in result]
     return json(total_json)
 
+
+@app.route('/to_test_deleting', methods=('DELETE', ))
+async def delete_all_users(request):
+    users_db.users.remove({})
+    return json({"message": "users are successfully deleted"})
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8000)
